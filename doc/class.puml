@@ -1,0 +1,74 @@
+@startuml
+
+hide empty fields
+hide empty methods
+
+interface Event {
+  ' EventHandler collects changes to the components and issues events
+  ' only once for single thing. This schema should be changed if that happens.
+  ' But first, I'll try to implement like this.
+  engine: Engine
+  entity: number
+  component: String
+}
+interface Action {
+  type: String
+  payload: Object
+  meta: Object
+}
+interface Component
+interface JSON
+
+Action --|> JSON
+Component --|> JSON
+
+interface Middleware {
+  engine: Engine
+  action: Action
+  next: Function
+}
+interface System {
+  ' Systems should be able to set up events, etc. However I don't suppose
+  ' That's system's job.
+  engine: Engine
+  action: Action
+}
+interface Callback {
+  event: Event
+}
+interface Function
+
+Middleware --|> Function
+System --|> Function
+Callback --|> Function
+
+class Engine {
+  ' EventListener add / delete
+  ' System add and delete should be done at initalization time
+  ' Middleware too
+  ' Component too, since Components are managed by the engine.
+}
+
+Middleware --o Engine
+System --o Engine
+
+class Entity {
+  id: number
+  get(key: String)
+  set(key: String, component: Component)
+}
+
+Component --* Entity
+Entity --* Engine
+Entity - Event
+
+class EventHandler {
+
+}
+
+EventHandler --* Engine
+Callback --* EventHandler
+Event --o EventHandler
+
+
+@enduml
