@@ -21,13 +21,10 @@ gulp.task('mocha', function() {
 
 gulp.task('flow', function() {
   return gulp.src(['src/**/*.js'])
-    .pipe(flow({
-      all: false,
-      weak: false
-    }));
+    .pipe(flow());
 });
 
-gulp.task('test', ['lint', 'mocha', 'flow']);
+gulp.task('test', ['lint', 'mocha']);
 
 gulp.task('watch', function() {
   return gulp.watch(['src/**/*.js', 'test/**/*.js'], ['test']);
