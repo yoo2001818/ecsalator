@@ -16,7 +16,12 @@ gulp.task('lint', function () {
 
 gulp.task('mocha', function() {
   return gulp.src(['test/**/*.js'], { read: false })
-    .pipe(mocha({ reporter: 'list' }));
+    .pipe(mocha({ reporter: 'spec' }));
+});
+
+gulp.task('mochaSimple', function() {
+  return gulp.src(['test/**/*.js'], { read: false })
+    .pipe(mocha({ reporter: 'min' }));
 });
 
 gulp.task('flow', function() {
@@ -27,7 +32,7 @@ gulp.task('flow', function() {
 gulp.task('test', ['lint', 'mocha']);
 
 gulp.task('watch', function() {
-  return gulp.watch(['src/**/*.js', 'test/**/*.js'], ['test']);
+  return gulp.watch(['src/**/*.js', 'test/**/*.js'], ['mochaSimple']);
 });
 
 gulp.task('babel', function() {
