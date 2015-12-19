@@ -3,24 +3,43 @@
 hide empty fields
 hide empty methods
 
-interface Event {
-  ' EventHandler collects changes to the components and issues events
-  ' only once for single thing. This schema should be changed if that happens.
-  ' But first, I'll try to implement like this.
+class Event {
   engine: Engine
-  entity: number
-  component: String
+  type: string
 }
+
+class ComponentEvent {
+  component: string
+  entities: Map<number, Component>
+}
+
+class EntityEvent {
+  entity: number
+  components: Map<string, Component>
+}
+
+ComponentEvent --|> Event
+EntityEvent --|> Event
+
+interface Observable {
+  observe(observer: Observer): void
+  unobserve(observer: Observer): void
+}
+
 interface Action {
   type: String
   payload: Object
   meta: Object
 }
-interface Component
+interface Component {
+  [id: number]: JSON
+}
 interface JSON
 
 Action --|> JSON
 Component --|> JSON
+
+Component --* State
 
 interface Middleware {
   engine: Engine
@@ -33,42 +52,69 @@ interface System {
   engine: Engine
   action: Action
 }
-interface Callback {
+interface Observer {
   event: Event
 }
 interface Function
 
 Middleware --|> Function
 System --|> Function
-Callback --|> Function
+Observer --|> Function
+
+class Handler {
+}
+
+Handler --|> Observer
+
+class State {
+  id: Component
+  [key: string]: Component
+}
 
 class Engine {
   ' EventListener add / delete
   ' System add and delete should be done at initalization time
   ' Middleware too
   ' Component too, since Components are managed by the engine.
+  systems: Array<System>
+  state: State
+
+  dispatch(action: Action)
+  update(delta: number)
+
+  get(id: number)
+  create(id: number)
+  remove(id: number)
 }
 
 Middleware --o Engine
 System --o Engine
+Engine --|> Observable
+State --* Engine
 
 class Entity {
+  engine: Engine
   id: number
   get(key: String)
-  set(key: String, component: Component)
+  set(key: String, component)
+  remove(key: String)
 }
 
-Component --* Entity
+Component --o Entity
 Entity --* Engine
-Entity - Event
+Entity --|> Observable
 
-class EventHandler {
-
+class EventQueue {
+  observeEntry()
+  observeComponent()
+  push()
+  notify()
 }
 
-EventHandler --* Engine
-Callback --* EventHandler
-Event --o EventHandler
+EventQueue --* Engine
+Observer --* EventQueue
+Event --o EventQueue
+
 
 
 @enduml
