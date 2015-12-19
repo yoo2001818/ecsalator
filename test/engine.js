@@ -93,5 +93,12 @@ describe('Engine', () => {
       ], []);
       expect(count).toBe(3);
     });
+    it('should prevent systems dispatching another action', () => {
+      expect(() => new Engine([], [
+        (engine) => engine.dispatch({
+          type: 'test/test'
+        })
+      ], [])).toThrow();
+    });
   });
 });
