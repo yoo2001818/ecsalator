@@ -101,4 +101,24 @@ describe('Engine', () => {
       ], [])).toThrow();
     });
   });
+  describe('#get', () => {
+    it('should return the Entity linked with the ID');
+    it('should throw error if entity is not found');
+  });
+  describe('#create', () => {
+    it('should return new Entity object');
+    it('should throw error if state is locked');
+    it('should throw error if entity already exists');
+    it('should automatically assign entity ID if not given');
+    it('should set component state to given value');
+    it('should emit an event');
+  });
+  describe('#remove', () => {
+    it('should accept an Entity object');
+    it('should accept an ID');
+    it('should throw error if state is locked');
+    it('should throw error if entity doesn\'t exists');
+    it('should delete from component state');
+    it('should emit an event');
+  });
 });
