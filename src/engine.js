@@ -39,8 +39,8 @@ export default class Engine {
     state: ?State
   ) {
     // Init event queue.
-    this.entityQueue = new EventQueue(this);
-    this.componentQueue = new EventQueue(this);
+    this.entityQueue = new EventQueue(this, 'entity');
+    this.componentQueue = new EventQueue(this, 'component');
     // Set up the state.
     //
     // If state is provided, Just overwrite current state to it.

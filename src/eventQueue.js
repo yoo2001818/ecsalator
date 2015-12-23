@@ -4,13 +4,15 @@
 
 export default class EventQueue<K: number | string, V: number | string> {
   engine: any;
+  type: string;
   queue: Map<K, Object>;
   observers: Map<K, Set<Function>>;
 
-  constructor(engine: any) {
+  constructor(engine: any, type: string) {
     this.engine = engine;
     this.queue = new Map();
     this.observers = new Map();
+    this.type = type;
   }
 
   observe(key: K, observer: Function): void {
@@ -48,16 +50,14 @@ export default class EventQueue<K: number | string, V: number | string> {
 
   // Iterate through event queue and notify the observers.
   notify(): void {
-    const { engine } = this;
+    const { engine, type } = this;
     for (let key: K of this.observers.keys()) {
       const values = this.queue.get(key);
       let observers = this.observers.get(key);
       if (observers === undefined) continue;
+      let event = { type, key, values, engine };
       for (let observer of observers.values()) {
-        observer({
-          type: 'entity',
-          key, values, engine
-        });
+        observer(event);
       }
     }
   }
