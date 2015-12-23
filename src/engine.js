@@ -1,5 +1,7 @@
 /* @flow */
 
+import EventQueue from './eventQueue';
+
 const INIT = '@@engine/init';
 const UPDATE = '@@engine/update';
 
@@ -28,12 +30,17 @@ export default class Engine {
   systems: Array<System>;
   dispatch: ((action: Action) => any);
   unlocked: boolean;
+  entityQueue: EventQueue<number, string>;
+  componentQueue: EventQueue<string, number>;
   constructor(
     middlewares: Array<Middleware>,
     systems: Array<System>,
     components: Array<string>,
     state: ?State
   ) {
+    // Init event queue.
+    this.entityQueue = new EventQueue(this);
+    this.componentQueue = new EventQueue(this);
     // Set up the state.
     //
     // If state is provided, Just overwrite current state to it.

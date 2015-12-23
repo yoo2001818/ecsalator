@@ -1,83 +1,47 @@
 /* @flow */
 
-import Engine from './engine';
-
 // Queues the events and emits them once after the action has processed.
 
-export default class EventQueue {
-  engine: ?Engine;
-  entityQueue: Map<number, Object>;
-  componentQueue: Map<string, Object>;
-  entityListeners: Map<number, Set<Function>>;
-  componentListeners: Map<string, Set<Function>>;
+export default class EventQueue<K: number | string, V: number | string> {
+  engine: any;
+  queue: Map<K, Object>;
+  observers: Map<K, Set<Function>>;
 
-  constructor(engine: ?Engine) {
+  constructor(engine: any) {
     this.engine = engine;
-    this.entityQueue = new Map();
-    this.componentQueue = new Map();
-    this.entityListeners = new Map();
-    this.componentListeners = new Map();
+    this.queue = new Map();
+    this.observers = new Map();
   }
 
-  observeEntry(id: number, listener: Function): void {
-    let listeners = this.entityListeners.get(id);
-    if (listeners === undefined) {
-      listeners = new Set();
-      this.entityListeners.set(id, listeners);
+  observe(key: K, observer: Function): void {
+    let observers = this.observers.get(key);
+    if (observers === undefined) {
+      observers = new Set();
+      this.observers.set(key, observers);
     }
-    listeners.add(listener);
+    observers.add(observer);
   }
 
-  unobserveEntry(id: number, listener: Function): void {
-    let listeners = this.entityListeners.get(id);
-    if (listeners === undefined) return;
-    listeners.delete(listener);
-    if (listeners.size === 0) {
-      this.entityListeners.delete(id);
-    }
-  }
-
-  observeComponent(name: string, listener: Function): void {
-    let listeners = this.componentListeners.get(name);
-    if (listeners === undefined) {
-      listeners = new Set();
-      this.componentListeners.set(name, listeners);
-    }
-    listeners.add(listener);
-  }
-
-  unobserveComponent(name: string, listener: Function): void {
-    let listeners = this.componentListeners.get(name);
-    if (listeners === undefined) return;
-    listeners.delete(listener);
-    if (listeners.size === 0) {
-      this.componentListeners.delete(name);
+  unobserve(key: K, observer: Function): void {
+    let observers = this.observers.get(key);
+    if (observers === undefined) return;
+    observers.delete(observer);
+    if (observers.size === 0) {
+      this.observers.delete(key);
     }
   }
 
   // Push new event to the queue. If the event is already created, it'll be
   // ignored.
-  push(entity: number, component: string, previous: any): void {
-    // Handle entity events...
-    if (this.entityListeners.has(entity)) {
-      let diff = this.entityQueue.get(entity);
+  push(key: K, value: V, previous: any): void {
+    if (this.observers.has(key)) {
+      let diff = this.queue.get(key);
       if (diff === undefined) {
         diff = {};
-        this.entityQueue.set(entity, diff);
+        this.queue.set(key, diff);
       }
-      if (diff[component] === undefined) {
-        diff[component] = previous;
-      }
-    }
-    // Handle component events...
-    if (this.componentListeners.has(component)) {
-      let diff = this.componentQueue.get(component);
-      if (diff === undefined) {
-        diff = {};
-        this.componentQueue.set(component, diff);
-      }
-      if (diff[entity] === undefined) {
-        diff[entity] = previous;
+      if (diff[value] === undefined) {
+        diff[value] = previous;
       }
     }
   }
@@ -85,27 +49,14 @@ export default class EventQueue {
   // Iterate through event queue and notify the observers.
   notify(): void {
     const { engine } = this;
-    // Notify entity listeners.
-    for (let entity: number of this.entityQueue.keys()) {
-      const components = this.entityQueue.get(entity);
-      let listeners = this.entityListeners.get(entity);
-      if (listeners === undefined) continue;
-      for (let listener of listeners.values()) {
-        listener({
+    for (let key: K of this.observers.keys()) {
+      const values = this.queue.get(key);
+      let observers = this.observers.get(key);
+      if (observers === undefined) continue;
+      for (let observer of observers.values()) {
+        observer({
           type: 'entity',
-          entity, components, engine
-        });
-      }
-    }
-    // Notify component listeners.
-    for (let component: string of this.componentQueue.keys()) {
-      const entities = this.componentQueue.get(component);
-      let listeners = this.componentListeners.get(component);
-      if (listeners === undefined) continue;
-      for (let listener of listeners.values()) {
-        listener({
-          type: 'component',
-          component, entities, engine
+          key, values, engine
         });
       }
     }
