@@ -51,7 +51,7 @@ export default class EventQueue<K: number | string, V: number | string> {
   // Iterate through event queue and notify the observers.
   notify(): void {
     const { engine, type } = this;
-    for (let key: K of this.observers.keys()) {
+    for (let key: K of this.queue.keys()) {
       const values = this.queue.get(key);
       let observers = this.observers.get(key);
       if (observers === undefined) continue;
@@ -60,5 +60,7 @@ export default class EventQueue<K: number | string, V: number | string> {
         observer(event);
       }
     }
+    // Empty the event queue.
+    this.queue.clear();
   }
 }
