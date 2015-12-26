@@ -63,4 +63,5 @@ export default class EventQueue<K: number | string, V: number | string> {
     // Empty the event queue.
     this.queue.clear();
   }
+
 }

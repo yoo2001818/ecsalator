@@ -1,12 +1,13 @@
 /* @flow */
 
+import Entity from './entity';
 import EventQueue from './eventQueue';
 
 const INIT = '@@engine/init';
 const UPDATE = '@@engine/update';
 
-type ComponentHolder = { [key: Number]: any };
-type State = { id: ComponentHolder, [key: String]: ComponentHolder };
+type ComponentHolder = { [key: number]: any };
+type State = { id: ComponentHolder, [key: string]: ComponentHolder };
 type Action = { type: string, payload?: Object, meta?: Object };
 type Middleware = ((engine: Engine, action: Action, next: Function) => any);
 type System = ((engine: Engine, action: Action) => any);
@@ -43,6 +44,11 @@ export default class Engine {
     this.componentQueue = new EventQueue(this, 'component');
     // Set up the state.
     //
+    // First, check if 'id' component is occupied; This component is reserved
+    // for ID checking.
+    if (components.indexOf('id') !== -1) {
+      throw new Error(`'id' component is reserved by the engine`);
+    }
     // If state is provided, Just overwrite current state to it.
     // Although we need to check every component in the components array is
     // present.
@@ -116,18 +122,49 @@ export default class Engine {
       for (let system of this.systems) {
         system(this, action);
       }
-      return action;
     } finally {
-      // Lock the state.
+      // Lock the state even if the running action has failed;
+      // If we don't do this, engine will be locked forever!
       this.unlocked = false;
     }
+    // If running the action was successful, notify the changes to the
+    // observers.
+    this.componentQueue.notify();
+    this.entityQueue.notify();
+    return action;
   }
 
   // An utility function to generate 'update' action.
-  update(delta: number = 0) {
+  update(delta: number = 0): void {
     this.dispatch({
       type: UPDATE,
       payload: { delta }
     });
   }
+
+  get(id: number): Entity {
+
+  }
+
+  create(id: ?number, template: ?Object): Entity {
+
+  }
+
+  remove(id: number | Entity): void {
+
+  }
+
+  notifyChange(entity: number, component: string, previous: any): void {
+    this.componentQueue.push(component, entity, previous);
+    this.entityQueue.push(entity, component, previous);
+  }
+
+  observe(component: string, observer: Function): void {
+    this.componentQueue.observe(component, observer);
+  }
+
+  unobserve(component: string, observer: Function): void {
+    this.componentQueue.unobserve(component, observer);
+  }
+
 }

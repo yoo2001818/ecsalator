@@ -6,20 +6,9 @@ hide empty methods
 class Event {
   engine: Engine
   type: string
+  key: any
+  value: Object
 }
-
-class ComponentEvent {
-  component: string
-  entities: Map<number, Component>
-}
-
-class EntityEvent {
-  entity: number
-  components: Map<string, Component>
-}
-
-ComponentEvent --|> Event
-EntityEvent --|> Event
 
 interface Observable {
   observe(observer: Observer): void
@@ -105,12 +94,13 @@ Entity --* Engine
 Entity --|> Observable
 
 class EventQueue {
-  observeEntry()
-  observeComponent()
+  observe()
+  unobserve()
   push()
   notify()
 }
 
+EventQueue --|> Observable
 EventQueue --* Engine
 Observer --* EventQueue
 Event --o EventQueue

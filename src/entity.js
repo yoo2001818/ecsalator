@@ -50,4 +50,12 @@ export default class Entity {
     // And remove the component.
     delete component[this.id];
   }
+
+  observe(observer: Function): void {
+    this.engine.entityQueue.observe(this.id, observer);
+  }
+
+  unobserve(observer: Function): void {
+    this.engine.entityQueue.unobserve(this.id, observer);
+  }
 }
