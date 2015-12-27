@@ -142,8 +142,10 @@ export default class Engine {
     });
   }
 
-  get(id: number): Entity {
-
+  get(id: number): ?Entity {
+    // Validate if the entity exists
+    if (this.state.id[id] === undefined) return null;
+    return new Entity(this, id);
   }
 
   create(id: ?number, template: ?Object): Entity {

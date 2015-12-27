@@ -1,4 +1,5 @@
 import Engine from '../src/engine';
+import Entity from '../src/entity';
 import expect from 'expect';
 
 describe('Engine', () => {
@@ -102,23 +103,190 @@ describe('Engine', () => {
     });
   });
   describe('#get', () => {
-    it('should return the Entity linked with the ID');
-    it('should throw error if entity is not found');
+    beforeEach('spawn engine with entities', () => {
+      engine = new Engine([], [], ['test'], {
+        id: {
+          1: 1
+        },
+        test: {
+          1: 'sleepy'
+        }
+      });
+    });
+    it('should return the Entity linked with the ID', () => {
+      let entity = engine.get(1);
+      expect(entity).toBeA(Entity);
+      expect(entity.id).toBe(1);
+      expect(entity.engine).toBe(engine);
+    });
+    it('should return null if entity is not found', () => {
+      expect(engine.get(2)).toEqual(null);
+    });
   });
   describe('#create', () => {
-    it('should return new Entity object');
-    it('should throw error if state is locked');
-    it('should throw error if entity already exists');
+    // Here, we create delegation systems because we can't mutate the entity
+    // if the engine is locked.
+    //
+    // Action creation function;
+    const spawn = (id, template) => ({
+      type: 'spawn',
+      payload: {
+        id, template
+      },
+      meta: {}
+    });
+    // We use this variable to look up the returned value.
+    let returned;
+    beforeEach('initialize engine', () => {
+      engine = new Engine([], [
+        // The 'spawner' system.
+        (engine, action) => {
+          const { type, payload } = action;
+          if (type === 'spawn') {
+            const { id, template } = payload;
+            returned = engine.create(id, template);
+          }
+        }
+      ], ['test']);
+    });
+    it('should return new Entity object', () => {
+      engine.dispatch(spawn(3));
+      expect(returned).toBeA(Entity);
+      expect(returned.id).toBe(3);
+      expect(returned.engine).toBe(engine);
+    });
+    it('should throw error if state is locked', () => {
+      expect(() => engine.create(2)).toThrow();
+    });
+    it('should throw error if entity already exists', () => {
+      engine.dispatch(spawn(2));
+      expect(() => engine.dispatch(spawn(2))).toThrow();
+    });
+    // I'm not sure how I should implement this. Maybe 'meta' entities can help?
+    // TODO Think a way to implement this.
     it('should automatically assign entity ID if not given');
-    it('should set component state to given value');
-    it('should emit an event');
+    it('should set component state to the template', () => {
+      engine.dispatch(spawn(3, {
+        test: {
+          hello: 'world',
+          random: 'text'
+        }
+      }));
+      const entity = engine.get(3);
+      expect(entity).toBeA(Entity);
+      expect(entity.get('test')).toEqual({
+        hello: 'world',
+        random: 'text'
+      });
+    });
+    it('should throw an error if template has id component', () => {
+      expect(() => engine.dispatch(spawn(3, {
+        id: 'nopenopenope'
+      }))).toThrow();
+    });
+    it('should throw an error if template has wrong component', () => {
+      expect(() => engine.dispatch(spawn(3, {
+        rainbow: 'spectrum'
+      }))).toThrow();
+    });
+    it('should emit an event', () => {
+      // Here, Set up the observer to verify if the event has succeeded.
+      // Entity events won't be issued because entity doesn't exist at that
+      // time.
+      let count = 0;
+      engine.observe('test', () => count++);
+      engine.dispatch(spawn(3, {
+        test: 'hey!'
+      }));
+      expect(count).toBe(1);
+    });
+    it('should have null in events', () => {
+      // Event should have null in previous value, indicating that the entity
+      // didn't exist at the time.
+      engine.observe('test', event => {
+        expect(event.type).toBe('component');
+        expect(event.key).toBe('test');
+        expect(event.values[3]).toEqual(null);
+      });
+      engine.dispatch(spawn(3, {
+        test: 'hey!'
+      }));
+    });
   });
   describe('#remove', () => {
-    it('should accept an Entity object');
-    it('should accept an ID');
-    it('should throw error if state is locked');
-    it('should throw error if entity doesn\'t exists');
-    it('should delete from component state');
-    it('should emit an event');
+    // Here, we create delegation systems because we can't mutate the entity
+    // if the engine is locked.
+    //
+    // Action creation function;
+    const remove = id => ({
+      type: 'spawn',
+      payload: {
+        entity: id
+      },
+      meta: {}
+    });
+    beforeEach('initialize engine', () => {
+      engine = new Engine([], [
+        // The 'remover' system.
+        (engine, action) => {
+          const { type, payload } = action;
+          if (type === 'remove') {
+            engine.remove(payload.entity);
+          }
+        }
+      ], ['test'], {
+        // Initialize with some default entities.
+        id: {
+          1: 1,
+          2: 2
+        },
+        test: {
+          2: 'yup'
+        }
+      });
+    });
+    it('should accept an Entity object', () => {
+      // Pass the entity to the system and check its presence.
+      // However, we really shouldn't pass non-POJO action to the system.
+      // This is fine because nothing in the engine serializes the action.
+      engine.dispatch(remove(engine.get(1)));
+      expect(engine.get(1)).toBe(null);
+    });
+    it('should accept an ID', () => {
+      engine.dispatch(remove(1));
+      expect(engine.get(1)).toBe(null);
+    });
+    it('should throw error if state is locked', () => {
+      expect(() => engine.remove(1)).toThrow();
+    });
+    it('should throw error if entity doesn\'t exists', () => {
+      expect(() => engine.dispatch(remove(404))).toThrow();
+    });
+    it('should delete all the components', () => {
+      engine.dispatch(remove(2));
+      // Check presence of entity #2's 'test' component.
+      expect(engine.state.test[2]).toEqual(undefined);
+    });
+    it('should emit an event', () => {
+      // Here, Set up the observer to verify if the event has succeeded.
+      let count = 0;
+      engine.observe('test', () => count++);
+      engine.get(2).observe(() => count++);
+      engine.dispatch(remove(2));
+      expect(count).toBe(2);
+    });
+    it('should have previous state in events', () => {
+      engine.observe('test', event => {
+        expect(event.type).toBe('component');
+        expect(event.key).toBe('test');
+        expect(event.values[2]).toBe('yup');
+      });
+      engine.get(2).observe(event => {
+        expect(event.type).toBe('entity');
+        expect(event.key).toBe(2);
+        expect(event.values['test']).toBe('yup');
+      });
+      engine.dispatch(remove(2));
+    });
   });
 });
