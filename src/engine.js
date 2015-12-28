@@ -149,11 +149,49 @@ export default class Engine {
   }
 
   create(id: ?number, template: ?Object): Entity {
-
+    // Check if the engine is locked.
+    if (!this.unlocked) throw new Error('Engine is locked');
+    // Auto increment entity creation.
+    if (id == null) {
+      throw new Error('Not implemented yet');
+    }
+    // Validate if the entity exists
+    if (this.state.id[id] !== undefined) {
+      throw new Error('Entity already exists');
+    }
+    // Otherwise create the entity.
+    let entity = new Entity(this, id);
+    // And set the state to make it 'alive'.
+    this.state.id[id] = 1;
+    // If template is given, try to override to them.
+    if (template != null) {
+      for (let key of Object.keys(template)) {
+        entity.set(key, template[key]);
+      }
+    }
+    return entity;
   }
 
-  remove(id: number | Entity): void {
-
+  remove(object: number | Entity): void {
+    // Check if the engine is locked.
+    if (!this.unlocked) throw new Error('Engine is locked');
+    let id;
+    // Try to match raw number.
+    if (typeof object === 'number') id = object;
+    // Try to match entity object.
+    if (object.id !== undefined) id = object.id;
+    // Validate if the entity doesn't exists
+    if (this.state.id[id] === undefined) {
+      throw new Error('Entity does not exists');
+    }
+    // And delete all the components from the entity.
+    for (let key of Object.keys(this.state)) {
+      let component = this.state[key][id];
+      if (component !== undefined) {
+        this.notifyChange(id, key, component);
+      }
+      delete this.state[key][id];
+    }
   }
 
   notifyChange(entity: number, component: string, previous: any): void {

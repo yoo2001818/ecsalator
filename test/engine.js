@@ -219,7 +219,7 @@ describe('Engine', () => {
     //
     // Action creation function;
     const remove = id => ({
-      type: 'spawn',
+      type: 'remove',
       payload: {
         entity: id
       },

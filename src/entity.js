@@ -11,7 +11,16 @@ export default class Entity {
     this.id = id;
   }
 
+  isValid(): boolean {
+    return this.engine.state.id[this.id] !== undefined;
+  }
+
+  checkValidity(): void {
+    if (!this.isValid()) throw new Error('Specified entity does not exist.');
+  }
+
   get(key: string): any {
+    this.checkValidity();
     let component = this.engine.state[key];
     if (component === undefined) {
       throw new Error(`The component ${key} is not defined`);
@@ -20,8 +29,9 @@ export default class Entity {
   }
 
   set(key: string, value: any): void {
+    this.checkValidity();
     // STOP if engine is locked.
-    if (this.engine.locked) throw new Error('Engine is locked');
+    if (!this.engine.unlocked) throw new Error('Engine is locked');
     // 'id' component is reserved; deny overriding it.
     if (key === 'id') throw new Error(`'id' component is reserved`);
     let component = this.engine.state[key];
@@ -35,8 +45,9 @@ export default class Entity {
   }
 
   remove(key: string): void {
+    this.checkValidity();
     // STOP if engine is locked.
-    if (this.engine.locked) throw new Error('Engine is locked');
+    if (!this.engine.unlocked) throw new Error('Engine is locked');
     // 'id' component is reserved; deny overriding it.
     // FYI: deleting 'id' component will make the engine think the entity is
     // not available. Since it can lead to memory leak, it should be prevented.
