@@ -289,4 +289,73 @@ describe('Engine', () => {
       engine.dispatch(remove(2));
     });
   });
+  describe('#observe', () => {
+    let entity;
+    const set = (entity, key, value) => ({
+      type: 'set',
+      payload: {
+        entity, key, value
+      },
+      meta: {}
+    });
+    // We need to initialize engine with some entities to issue events.
+    beforeEach('initialize engine with entities', () => {
+      engine = new Engine([], [
+        // We can't directly mutate the engine; we need to use a system
+        // to mutate it.
+        (engine, action) => {
+          const { type, payload } = action;
+          if (type === 'set') {
+            const { entity, key, value } = payload;
+            entity.set(key, value);
+          }
+        }
+      ], ['test'], {
+        id: {
+          1: 1
+        },
+        test: {
+          1: 'sleepy'
+        }
+      });
+      entity = engine.get(1);
+    });
+    it('should register component observers', () => {
+      let count = 0;
+      // Register component observer first.
+      engine.observe('test', () => {
+        count++;
+      });
+      engine.dispatch(set(entity, 'test', 'nope'));
+      expect(count).toBe(1);
+    });
+    it('should register global observers', () => {
+      let count = 0;
+      engine.observe(() => {
+        count++;
+      });
+      engine.update();
+      expect(count).toBe(1);
+    });
+    it('should be able to unobserve component observers', () => {
+      let count = 0;
+      let observer = () => {
+        count++;
+      };
+      engine.observe('test', observer);
+      engine.unobserve('test', observer);
+      engine.dispatch(set(entity, 'test', 'nope'));
+      expect(count).toBe(0);
+    });
+    it('should be able to unobserve global observers', () => {
+      let count = 0;
+      let observer = () => {
+        count++;
+      };
+      engine.observe(observer);
+      engine.unobserve(observer);
+      engine.dispatch(set(entity, 'test', 'nope'));
+      expect(count).toBe(0);
+    });
+  });
 });

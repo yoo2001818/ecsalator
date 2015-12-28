@@ -33,6 +33,7 @@ export default class Engine {
   unlocked: boolean;
   entityQueue: EventQueue<number, string>;
   componentQueue: EventQueue<string, number>;
+  observers: Set<Function>;
   constructor(
     middlewares: Array<Middleware>,
     systems: Array<System>,
@@ -42,6 +43,7 @@ export default class Engine {
     // Init event queue.
     this.entityQueue = new EventQueue(this, 'entity');
     this.componentQueue = new EventQueue(this, 'component');
+    this.observers = new Set();
     // Set up the state.
     //
     // First, check if 'id' component is occupied; This component is reserved
@@ -131,6 +133,10 @@ export default class Engine {
     // observers.
     this.componentQueue.notify();
     this.entityQueue.notify();
+    // Finally, notify the global observers along with the action.
+    for (let observer of this.observers) {
+      observer(action);
+    }
     return action;
   }
 
@@ -199,12 +205,24 @@ export default class Engine {
     this.entityQueue.push(entity, component, previous);
   }
 
-  observe(component: string, observer: Function): void {
-    this.componentQueue.observe(component, observer);
+  observe(component: string | Function, observer: ?Function): void {
+    if (typeof component === 'string' && observer != null) {
+      this.componentQueue.observe(component, observer);
+    } else if (typeof component === 'function') {
+      this.observers.add(component);
+    } else {
+      throw new Error('Should not reach here');
+    }
   }
 
-  unobserve(component: string, observer: Function): void {
-    this.componentQueue.unobserve(component, observer);
+  unobserve(component: string | Function, observer: ?Function): void {
+    if (typeof component === 'string' && observer != null) {
+      this.componentQueue.unobserve(component, observer);
+    } else if (typeof component === 'function') {
+      this.observers.delete(component);
+    } else {
+      throw new Error('Should not reach here');
+    }
   }
 
 }
