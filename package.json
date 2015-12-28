@@ -1,6 +1,6 @@
 {
   "name": "ecsalator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An action based Entity-Component-System library ",
   "main": "./lib/index.js",
   "scripts": {

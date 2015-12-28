@@ -1,10 +1,8 @@
 /* @flow */
 
-// Entry point of the library
+import Engine from './engine';
+import Entity from './entity';
+import EventQueue from './eventQueue';
 
-// Flow example.
-function foo(x: string): number {
-  return parseInt(x) * 10;
-}
-
-foo('Hello, world!');
+export default Engine;
+export { Engine, Entity, EventQueue };
