@@ -22,6 +22,8 @@ export default class Entity {
   get(key: string): any {
     this.checkValidity();
     let component = this.engine.state[key];
+    // 'meta' component shouldn't be accessed, as it can cause an error.
+    if (key === 'meta') throw new Error(`'meta' component is reserved`);
     if (component === undefined) {
       throw new Error(`The component ${key} is not defined`);
     }
@@ -34,6 +36,8 @@ export default class Entity {
     if (!this.engine.unlocked) throw new Error('Engine is locked');
     // 'id' component is reserved; deny overriding it.
     if (key === 'id') throw new Error(`'id' component is reserved`);
+    // 'meta' component is reserved too.
+    if (key === 'meta') throw new Error(`'meta' component is reserved`);
     let component = this.engine.state[key];
     if (component === undefined) {
       throw new Error(`The component ${key} is not defined`);
@@ -52,6 +56,8 @@ export default class Entity {
     // FYI: deleting 'id' component will make the engine think the entity is
     // not available. Since it can lead to memory leak, it should be prevented.
     if (key === 'id') throw new Error(`'id' component is reserved`);
+    // 'meta' component is reserved too.
+    if (key === 'meta') throw new Error(`'meta' component is reserved`);
     let component = this.engine.state[key];
     if (component === undefined) {
       throw new Error(`The component ${key} is not defined`);

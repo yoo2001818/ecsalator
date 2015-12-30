@@ -42,7 +42,8 @@ describe('Entity', () => {
       },
       test: {
         1: 'sleepy'
-      }
+      },
+      meta: {}
     });
     entity = engine.get(1);
   });
@@ -52,6 +53,9 @@ describe('Entity', () => {
     });
     it('should throw error when component is invalid', () => {
       expect(() => entity.get('never')).toThrow();
+    });
+    it('should throw error when accessing meta component', () => {
+      expect(() => entity.get('meta')).toThrow();
     });
     it('should throw error when entity is invalid', () => {
       entity = new Entity(engine, 32767);
@@ -65,6 +69,9 @@ describe('Entity', () => {
     });
     it('should prevent overriding id component', () => {
       expect(() => engine.dispatch(set(entity, 'id', 'nope'))).toThrow();
+    });
+    it('should prevent overriding meta component', () => {
+      expect(() => engine.dispatch(set(entity, 'meta', 'noooo'))).toThrow();
     });
     it('should throw error when component is invalid', () => {
       expect(() => engine.dispatch(set(entity, 'tera', 'byte'))).toThrow();
@@ -102,6 +109,9 @@ describe('Entity', () => {
     });
     it('should prevent removing id component', () => {
       expect(() => engine.dispatch(remove(entity, 'id'))).toThrow();
+    });
+    it('should prevent removing meta component', () => {
+      expect(() => engine.dispatch(remove(entity, 'meta'))).toThrow();
     });
     it('should throw error when component is invalid', () => {
       expect(() => engine.dispatch(remove(entity, 'giga'))).toThrow();

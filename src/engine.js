@@ -2,12 +2,17 @@
 
 import Entity from './entity';
 import EventQueue from './eventQueue';
+import SingleEventQueue from './singleEventQueue';
 
 const INIT = '@@engine/init';
 const UPDATE = '@@engine/update';
 
 type ComponentHolder = { [key: number]: any };
-type State = { id: ComponentHolder, [key: string]: ComponentHolder };
+type State = {
+  id: ComponentHolder,
+  meta: Object,
+  [key: string]: ComponentHolder
+};
 type Action = { type: string, payload?: Object, meta?: Object };
 type Middleware = ((engine: Engine, action: Action, next: Function) => any);
 type System = ((engine: Engine, action: Action) => any);
@@ -33,6 +38,7 @@ export default class Engine {
   unlocked: boolean;
   entityQueue: EventQueue<number, string>;
   componentQueue: EventQueue<string, number>;
+  metaQueue: SingleEventQueue;
   observers: Set<Function>;
   constructor(
     middlewares: Array<Middleware>,
@@ -43,6 +49,7 @@ export default class Engine {
     // Init event queue.
     this.entityQueue = new EventQueue(this, 'entity');
     this.componentQueue = new EventQueue(this, 'component');
+    this.metaQueue = new SingleEventQueue(this, 'meta');
     this.observers = new Set();
     // Set up the state.
     //
@@ -51,12 +58,17 @@ export default class Engine {
     if (components.indexOf('id') !== -1) {
       throw new Error(`'id' component is reserved by the engine`);
     }
+    //
+    // Also, 'meta' component is reserved for metadatas.
+    if (components.indexOf('meta') !== -1) {
+      throw new Error(`'meta' component is reserved by the engine`);
+    }
     // If state is provided, Just overwrite current state to it.
     // Although we need to check every component in the components array is
     // present.
     if (state != null) {
       const stateKeys = Object.keys(state);
-      const componentKeys = components.concat(['id']);
+      const componentKeys = components.concat(['id', 'meta']);
       // Compare the keys.
       let surplus = stateKeys.filter(
         name => componentKeys.indexOf(name) === -1
@@ -76,7 +88,7 @@ export default class Engine {
       this.state = state;
     } else {
       // Set up the state according to the components array.
-      this.state = {id: {}};
+      this.state = {id: {}, meta: {}};
       for (let component: string of components) {
         this.state[component] = {};
       }
@@ -131,12 +143,15 @@ export default class Engine {
     }
     // If running the action was successful, notify the changes to the
     // observers.
-    this.componentQueue.notify();
-    this.entityQueue.notify();
-    // Finally, notify the global observers along with the action.
+    //
+    // Notify the global observers along with the action.
     for (let observer of this.observers) {
       observer(action);
     }
+    // Notify other observers..
+    this.componentQueue.notify();
+    this.entityQueue.notify();
+    this.metaQueue.notify();
     return action;
   }
 
@@ -223,6 +238,36 @@ export default class Engine {
     } else {
       throw new Error('Should not reach here');
     }
+  }
+
+  setMeta(key: string, value: any): void {
+    // Check if the engine is locked.
+    if (!this.unlocked) throw new Error('Engine is locked');
+    // Notify the listener..
+    this.metaQueue.push(key, this.state.meta[key]);
+    // Overwrite the value.
+    this.state.meta[key] = value;
+  }
+
+  getMeta(key: string): any {
+    return this.state.meta[key];
+  }
+
+  removeMeta(key: string): void {
+    // Check if the engine is locked.
+    if (!this.unlocked) throw new Error('Engine is locked');
+    // Notify the listener..
+    this.metaQueue.push(key, this.state.meta[key]);
+    // Delete the value.
+    delete this.state.meta[key];
+  }
+
+  observeMeta(key: string, observer: Function): void {
+    this.metaQueue.observe(key, observer);
+  }
+
+  unobserveMeta(key: string, observer: Function): void {
+    this.metaQueue.unobserve(key, observer);
   }
 
 }

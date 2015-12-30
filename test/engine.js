@@ -8,23 +8,27 @@ describe('Engine', () => {
     it('shouldn\'t initalize without proper arguments', () => {
       expect(() => new Engine()).toThrow();
     });
-    it('should have \'id\' component after initalization', () => {
+    it('should have \'id\', \'meta\' component after initalization', () => {
       engine = new Engine([], [], []);
       expect(engine.state).toEqual({
-        id: {}
+        id: {},
+        meta: {}
       });
     });
     it('should override state if given', () => {
-      engine = new Engine([], [], [], {id: {test: 'eee'}});
+      engine = new Engine([], [], [], {id: {test: 'eee'}, meta: {}});
       expect(engine.state).toEqual({
         id: {
           test: 'eee'
-        }
+        },
+        meta: {}
       });
     });
     it('should throw error if components and state mismatches', () => {
-      expect(() => new Engine([], [], ['hey'], {id: {test: 'eee'}})).toThrow();
-      expect(() => new Engine([], [], [], {id: {}, apple: {}})).toThrow();
+      expect(() => new Engine([], [], ['hey'], {id: {test: 'eee'}, meta: {}}))
+        .toThrow();
+      expect(() => new Engine([], [], [], {id: {}, apple: {}, meta: {}}))
+        .toThrow();
     });
   });
   describe('#dispatch()', () => {
@@ -110,7 +114,8 @@ describe('Engine', () => {
         },
         test: {
           1: 'sleepy'
-        }
+        },
+        meta: {}
       });
     });
     it('should return the Entity linked with the ID', () => {
@@ -184,6 +189,11 @@ describe('Engine', () => {
         id: 'nopenopenope'
       }))).toThrow();
     });
+    it('should throw an error if template has meta component', () => {
+      expect(() => engine.dispatch(spawn(3, {
+        meta: 'nope too'
+      }))).toThrow();
+    });
     it('should throw an error if template has wrong component', () => {
       expect(() => engine.dispatch(spawn(3, {
         rainbow: 'spectrum'
@@ -242,7 +252,8 @@ describe('Engine', () => {
         },
         test: {
           2: 'yup'
-        }
+        },
+        meta: {}
       });
     });
     it('should accept an Entity object', () => {
@@ -316,7 +327,8 @@ describe('Engine', () => {
         },
         test: {
           1: 'sleepy'
-        }
+        },
+        meta: {}
       });
       entity = engine.get(1);
     });
@@ -355,6 +367,150 @@ describe('Engine', () => {
       engine.observe(observer);
       engine.unobserve(observer);
       engine.dispatch(set(entity, 'test', 'nope'));
+      expect(count).toBe(0);
+    });
+  });
+  describe('#setMeta', () => {
+    const set = (key, value) => ({
+      type: 'set',
+      payload: {
+        key, value
+      },
+      meta: {}
+    });
+    beforeEach('initialize engine', () => {
+      engine = new Engine([], [
+        // We can't directly mutate the engine; we need to use a system
+        // to mutate it.
+        (engine, action) => {
+          const { type, payload } = action;
+          if (type === 'set') {
+            const { key, value } = payload;
+            engine.setMeta(key, value);
+          }
+        }
+      ], [], {
+        id: {},
+        meta: {}
+      });
+    });
+    it('should apply metadata', () => {
+      engine.dispatch(set('hello', 'world'));
+      engine.dispatch(set('great', 'I suppose'));
+      expect(engine.state.meta.hello).toBe('world');
+      expect(engine.state.meta.great).toBe('I suppose');
+    });
+    it('should throw error if state is locked', () => {
+      expect(() => engine.setMeta('hello', 'world')).toThrow();
+    });
+    it('should emit an event', () => {
+      let count = 0;
+      engine.observeMeta('test', event => {
+        expect(event.type).toBe('meta');
+        expect(event.engine).toBe(engine);
+        expect(event.key).toBe('test');
+        expect(event.value).toBe(undefined);
+        count++;
+      });
+      engine.dispatch(set('test', 'nope'));
+      expect(count).toBe(1);
+    });
+  });
+  describe('#removeMeta', () => {
+    const remove = (key) => ({
+      type: 'remove',
+      payload: {
+        key
+      },
+      meta: {}
+    });
+    beforeEach('initialize engine', () => {
+      engine = new Engine([], [
+        (engine, action) => {
+          const { type, payload } = action;
+          if (type === 'remove') {
+            const { key } = payload;
+            engine.removeMeta(key);
+          }
+        }
+      ], [], {
+        id: {},
+        meta: {
+          hello: 'world',
+          nice: 'day'
+        }
+      });
+    });
+    it('should remove metadata', () => {
+      engine.dispatch(remove('nice'));
+      expect(engine.state.meta).toEqual({
+        hello: 'world'
+      });
+    });
+    it('should throw error if state is locked', () => {
+      expect(() => engine.removeMeta('hello')).toThrow();
+    });
+    it('should emit an event', () => {
+      let count = 0;
+      // Register meta observer first.
+      engine.observeMeta('hello', event => {
+        expect(event.type).toBe('meta');
+        expect(event.engine).toBe(engine);
+        expect(event.key).toBe('hello');
+        expect(event.value).toBe('world');
+        count++;
+      });
+      engine.dispatch(remove('hello'));
+      expect(count).toBe(1);
+    });
+  });
+  describe('#getMeta', () => {
+    beforeEach('initialize engine', () => {
+      engine = new Engine([], [], [], {
+        id: {},
+        meta: {
+          hello: 'world',
+          nice: 'day'
+        }
+      });
+    });
+    it('should return metadata', () => {
+      expect(engine.getMeta('hello')).toBe('world');
+      expect(engine.getMeta('nice')).toBe('day');
+    });
+  });
+  describe('#unobserveMeta', () => {
+    const set = (key, value) => ({
+      type: 'set',
+      payload: {
+        key, value
+      },
+      meta: {}
+    });
+    beforeEach('initialize engine', () => {
+      engine = new Engine([], [
+        // We can't directly mutate the engine; we need to use a system
+        // to mutate it.
+        (engine, action) => {
+          const { type, payload } = action;
+          if (type === 'set') {
+            const { key, value } = payload;
+            engine.setMeta(key, value);
+          }
+        }
+      ], [], {
+        id: {},
+        meta: {}
+      });
+    });
+    it('should be able to unobserve a component', () => {
+      let count = 0;
+      let observer = () => {
+        count++;
+      };
+      engine.observeMeta('test', observer);
+      engine.unobserveMeta('test', observer);
+      engine.dispatch(set('test', 'nope'));
       expect(count).toBe(0);
     });
   });
