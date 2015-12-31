@@ -1,5 +1,6 @@
 import Engine from '../src/engine';
 import Entity from '../src/entity';
+import FilteredEntities from '../src/filteredEntities';
 import expect from 'expect';
 
 describe('Engine', () => {
@@ -512,6 +513,25 @@ describe('Engine', () => {
       engine.unobserveMeta('test', observer);
       engine.dispatch(set('test', 'nope'));
       expect(count).toBe(0);
+    });
+  });
+  describe('#filter', () => {
+    beforeEach('initialize engine', () => {
+      engine = new Engine([], [], ['test', 'boop', 'boom']);
+    });
+    // Any other checks will be done in 'filteredEntities.js'.
+    // This simply check if it returns a valid object.
+    it('should return a FilteredEntities object', () => {
+      let filter = engine.filter('test');
+      expect(filter).toBeA(FilteredEntities);
+    });
+    it('should accept an array', () => {
+      let filter = engine.filter(['boop', 'boom']);
+      expect(filter).toBeA(FilteredEntities);
+    });
+    it('should accept arguments', () => {
+      let filter = engine.filter('boop', 'boom');
+      expect(filter).toBeA(FilteredEntities);
     });
   });
 });

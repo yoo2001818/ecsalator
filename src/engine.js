@@ -3,6 +3,7 @@
 import Entity from './entity';
 import EventQueue from './eventQueue';
 import SingleEventQueue from './singleEventQueue';
+import FilteredEntities from './filteredEntities';
 
 const INIT = '@@engine/init';
 const UPDATE = '@@engine/update';
@@ -268,6 +269,18 @@ export default class Engine {
 
   unobserveMeta(key: string, observer: Function): void {
     this.metaQueue.unobserve(key, observer);
+  }
+
+  filter(...args: Array<Array<string>|string>): FilteredEntities {
+    let keys: Array<string> = [];
+    for (var i = 0; i < args.length; ++i) {
+      if (Array.isArray(args[i])) {
+        keys = keys.concat(args[i]);
+      } else {
+        keys.push(args[i]);
+      }
+    }
+    return new FilteredEntities(this, keys);
   }
 
 }
