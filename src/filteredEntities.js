@@ -33,6 +33,7 @@ export default class FilteredEntities {
     }
     // Finally, parse the strings to numbers.
     entityCache = entityCache.map(value => parseInt(value));
+    this.entities = entityCache;
   }
   attach() {
     for (let key of this.keys) {
