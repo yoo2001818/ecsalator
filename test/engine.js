@@ -168,9 +168,14 @@ describe('Engine', () => {
       engine.dispatch(spawn(2));
       expect(() => engine.dispatch(spawn(2))).toThrow();
     });
-    // I'm not sure how I should implement this. Maybe 'meta' entities can help?
-    // TODO Think a way to implement this.
-    it('should automatically assign entity ID if not given');
+    it('should automatically assign entity ID if not given', () => {
+      engine.dispatch(spawn());
+      expect(returned.id).toBe(1);
+      engine.dispatch(spawn());
+      expect(returned.id).toBe(2);
+      engine.dispatch(spawn());
+      expect(returned.id).toBe(3);
+    });
     it('should set component state to the template', () => {
       engine.dispatch(spawn(3, {
         test: {
@@ -532,6 +537,46 @@ describe('Engine', () => {
     it('should accept arguments', () => {
       let filter = engine.filter('boop', 'boom');
       expect(filter).toBeA(FilteredEntities);
+    });
+  });
+  describe('#getNextId()', () => {
+    const spawn = (id, template) => ({
+      type: 'spawn',
+      payload: {
+        id, template
+      },
+      meta: {}
+    });
+    beforeEach('initialize engine', () => {
+      engine = new Engine([], [
+        // The 'remover' system.
+        (engine, action) => {
+          const { type, payload } = action;
+          if (type === 'spawn') {
+            const { id, template } = payload;
+            engine.create(id, template);
+          }
+        }
+      ], ['test'], {
+        // Initialize with some default entities.
+        id: {
+          1: 1,
+          2: 2
+        },
+        test: {
+          2: 'yup'
+        },
+        meta: {
+          lastId: 3
+        }
+      });
+    });
+    it('should return valid next id', () => {
+      expect(engine.getNextId()).toBe(3);
+    });
+    it('should return valid id after spawning', () => {
+      engine.dispatch(spawn());
+      expect(engine.getNextId()).toBe(4);
     });
   });
 });

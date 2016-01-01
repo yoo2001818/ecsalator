@@ -171,20 +171,20 @@ export default class Engine {
   }
 
   create(id: ?number, template: ?Object): Entity {
+    // Auto increment entity creation.
+    let newId: number = id || this.getNextId();
     // Check if the engine is locked.
     if (!this.unlocked) throw new Error('Engine is locked');
-    // Auto increment entity creation.
-    if (id == null) {
-      throw new Error('Not implemented yet');
-    }
     // Validate if the entity exists
-    if (this.state.id[id] !== undefined) {
+    if (this.state.id[newId] !== undefined) {
       throw new Error('Entity already exists');
     }
     // Otherwise create the entity.
-    let entity = new Entity(this, id);
+    let entity = new Entity(this, newId);
     // And set the state to make it 'alive'.
-    this.state.id[id] = 1;
+    this.state.id[newId] = 1;
+    // Set the last ID...
+    this.setMeta('lastId', Math.max(newId + 1, this.getNextId()));
     // If template is given, try to override to them.
     if (template != null) {
       for (let key of Object.keys(template)) {
@@ -281,6 +281,10 @@ export default class Engine {
       }
     }
     return new FilteredEntities(this, keys);
+  }
+
+  getNextId(): number {
+    return this.getMeta('lastId') || 1;
   }
 
 }
