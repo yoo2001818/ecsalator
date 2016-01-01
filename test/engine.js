@@ -217,7 +217,7 @@ describe('Engine', () => {
       engine.observe('test', event => {
         expect(event.type).toBe('component');
         expect(event.key).toBe('test');
-        expect(event.values[3]).toEqual(null);
+        expect(event.values[3]).toEqual(undefined);
       });
       engine.dispatch(spawn(3, {
         test: 'hey!'
