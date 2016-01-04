@@ -25,8 +25,8 @@ function setupMiddlewares(
   let next = final;
   for (let middleware: Middleware of middlewares.reverse()) {
     const localNext = next;
-    next = (engine: Engine, action: Action) => middleware(engine, action,
-      action => localNext(engine, action)
+    next = (engine: Engine, action: Action) => middleware.call(
+      middleware, engine, action, action => localNext(engine, action)
     );
   }
   return next;
@@ -138,7 +138,7 @@ export default class Engine {
       // Iterate through systems
       // Although systems have 'actions' property, we'll skip that for now.
       for (let system of this.systems) {
-        system(this, action);
+        system.call(system, this, action);
       }
     } finally {
       // Lock the state even if the running action has failed;
