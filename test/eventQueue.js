@@ -40,6 +40,11 @@ describe('EventQueue', () => {
       queue.notify();
       expect(passed).toBe(0);
     });
+    it('should silently ignore unknown requests', () => {
+      const observer = () => {};
+      queue.unobserve(3, observer);
+      queue.unobserve(3, observer);
+    });
     it('should not unregister other observers', () => {
       let passed = 0;
       const observer = () => {
@@ -106,6 +111,30 @@ describe('EventQueue', () => {
       });
       queue.push(3, 'meow', 'woof');
       queue.push(3, 'nyan', 'cat');
+      queue.notify();
+    });
+    it('should retain older value if duplicates', () => {
+      let passed = 0;
+      queue.observe(3, event => {
+        passed++;
+        expect(event).toEqual({
+          engine: null,
+          type: 'entity',
+          key: 3,
+          values: {
+            nyan: 'cat'
+          }
+        });
+      });
+      queue.push(3, 'nyan', 'cat');
+      queue.push(3, 'nyan', 'rainbow');
+      queue.notify();
+    });
+    it('should not error if observer not exists', () => {
+      const observer = () => {};
+      queue.observe(3, observer);
+      queue.push(3, 'nyan', 'cat');
+      queue.unobserve(3, observer);
       queue.notify();
     });
     it('should empty the event queue', () => {
