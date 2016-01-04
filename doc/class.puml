@@ -3,108 +3,139 @@
 hide empty fields
 hide empty methods
 
-class Event {
-  engine: Engine
-  type: string
-  key: any
-  value: Object
+package core {
+
+  interface Action {
+    type: String
+    payload: Object
+    meta: Object
+  }
+
+  interface JSON
+  interface JSONable {
+    toJSON(): JSON
+  }
+
+  Action --|> JSON
+  JSON --|> JSONable
+
+  interface Middleware {
+    engine: Engine
+    action: Action
+    next: Function
+  }
+  class MiddlewareRunner {
+    middlewares: Array<Middleware>
+  }
+
+  MiddlewareRunner --|> Middleware
+  Middleware --* MiddlewareRunner
+
+  interface System {
+    ' Systems should be able to set up events, etc. However I don't suppose
+    ' That's system's job.
+    engine: Engine
+    action: Action
+  }
+  class SystemRunner {
+    engine: Engine
+    systems: Array<System>
+  }
+
+  SystemRunner --|> Middleware
+  System --* SystemRunner
+
+  interface Function
+
+  Middleware --|> Function
+  System --|> Function
+
+  interface Component {
+  }
+
+  Component -|> JSON
+
+  class Entity {
+    engine: Engine
+    id: number
+    components: Object
+    cache: Object
+    get(key: String)
+    set(key: String, component)
+    remove(key: String)
+  }
+
+  Component --* Entity
+  Entity -|> JSONable
+
+  class State {
+    entities: Map<number, Entity>
+    meta: Object
+    components: ComponentRegister
+
+    create()
+    remove()
+  }
+
+  Entity --* State
+  State --|> JSONable
+  ComponentRegister ----* State
+
+  class ComponentRegister {
+    components: Array<string>
+  }
+
+  interface Validator {
+    entity: Entity
+    component: string
+    value: Component
+  }
+
+  Validator --|> Function
+
+  class ValidatorRunner {
+    validators: Array<Validator>
+  }
+
+  ValidatorRunner --|> Validator
+  Validator --* ValidatorRunner
+
+  interface Cache {
+  }
+
+  Cache --|> Validator
+
+  class CacheRunner {
+    caches: Array<Cache>
+  }
+
+  CacheRunner --|> Validator
+
+  Cache --* CacheRunner
+
+  class Engine {
+    cache: Object
+    validator: ValidatorRunner
+    dispatch: MiddlewareRunner
+  }
+
+  ValidatorRunner --* Engine
+  MiddlewareRunner --* Engine
+  Engine -|> State
+
 }
 
-interface Observable {
-  observe(observer: Observer): void
-  unobserve(observer: Observer): void
+class BitSet
+
+package extra {
+  class ComponentCache
+  ComponentCache --|> Cache
+  ComponentCache --> BitSet
+  class Family
+  BitSet --* Family
+  Family --|> Cache
+  Family --> ComponentCache
 }
-
-interface Action {
-  type: String
-  payload: Object
-  meta: Object
-}
-interface Component {
-  [id: number]: JSON
-}
-interface JSON
-
-Action --|> JSON
-Component --|> JSON
-
-Component --* State
-
-interface Middleware {
-  engine: Engine
-  action: Action
-  next: Function
-}
-interface System {
-  ' Systems should be able to set up events, etc. However I don't suppose
-  ' That's system's job.
-  engine: Engine
-  action: Action
-}
-interface Observer {
-  event: Event
-}
-interface Function
-
-Middleware --|> Function
-System --|> Function
-Observer --|> Function
-
-class Handler {
-}
-
-Handler --|> Observer
-
-class State {
-  id: Component
-  [key: string]: Component
-}
-
-class Engine {
-  ' EventListener add / delete
-  ' System add and delete should be done at initalization time
-  ' Middleware too
-  ' Component too, since Components are managed by the engine.
-  systems: Array<System>
-  state: State
-
-  dispatch(action: Action)
-  update(delta: number)
-
-  get(id: number)
-  create(id: number)
-  remove(id: number)
-}
-
-Middleware --o Engine
-System --o Engine
-Engine --|> Observable
-State --* Engine
-
-class Entity {
-  engine: Engine
-  id: number
-  get(key: String)
-  set(key: String, component)
-  remove(key: String)
-}
-
-Component --o Entity
-Entity --* Engine
-Entity --|> Observable
-
-class EventQueue {
-  observe()
-  unobserve()
-  push()
-  notify()
-}
-
-EventQueue --|> Observable
-EventQueue --* Engine
-Observer --* EventQueue
-Event --o EventQueue
-
 
 
 @enduml

@@ -5,26 +5,21 @@ title Basic Structure
 (*) --> [create] Action
 
 View -> [create] Action
--> [dispatch] Engine
 -> [dispatch] Middleware
 -> [next] Middleware
--> [dispatch] Engine
+--> [dispatch] Middleware
 
 Middleware --> [done] System
 System -> [next] System
-System --> [edit] Entity
-System --> [done] Queue
+System --> [set] Validator
 
-Entity -> [edit] Component
+Validator -> [next] Validator
+--> [done] Cache
+-> [next] Cache
+--> [write] System
 
-Component --> [event] Queue
-Entity --> [event] Queue
-note right: queues events and emits only once.
-
-Queue --> [dispatch] Handler
-
-Handler --> [update] View
-Handler -> (*)
+System --> [done] View
+View -> (*)
 
 
 @enduml
