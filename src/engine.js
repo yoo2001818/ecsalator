@@ -34,6 +34,7 @@ function setupMiddlewares(
 
 export default class Engine {
   state: State;
+  cache: Object;
   systems: Array<System>;
   dispatch: ((action: Action) => any);
   unlocked: boolean;
@@ -52,6 +53,8 @@ export default class Engine {
     this.componentQueue = new EventQueue(this, 'component');
     this.metaQueue = new SingleEventQueue(this, 'meta');
     this.observers = new Set();
+    // Set up the cache.
+    this.cache = {};
     // Set up the state.
     //
     // First, check if 'id' component is occupied; This component is reserved
@@ -285,6 +288,12 @@ export default class Engine {
 
   getNextId(): number {
     return this.getMeta('lastId') || 1;
+  }
+
+  getCache(key: string): Object {
+    let obj = this.cache[key] || {};
+    if (this.cache[key] == null) this.cache[key] = obj;
+    return obj;
   }
 
 }

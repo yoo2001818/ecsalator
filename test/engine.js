@@ -579,4 +579,21 @@ describe('Engine', () => {
       expect(engine.getNextId()).toBe(4);
     });
   });
+  describe('#getCache', () => {
+    beforeEach('initialize engine', () => {
+      engine = new Engine([], [], []);
+    });
+    it('should return new cache if not exists', () => {
+      let cache = engine.getCache('test');
+      expect(cache).toEqual({});
+    });
+    it('should return old cache if exists', () => {
+      let cache = engine.getCache('test');
+      cache.a = 'hello';
+      let newCache = engine.getCache('test');
+      expect(newCache).toEqual({
+        a: 'hello'
+      });
+    });
+  });
 });
