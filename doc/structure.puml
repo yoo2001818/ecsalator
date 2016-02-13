@@ -2,24 +2,32 @@
 
 title Basic Structure
 
-(*) --> [create] Action
+(*) --> [action] "Store.dispatch()"
 
-View -> [create] Action
--> [dispatch] Middleware
--> [next] Middleware
---> [dispatch] Middleware
+"View event" -> [action] "Store.dispatch()"
+-> "Middleware()"
+--> [  ] "next()"
+--> [next chain] "Middleware()"
+-> "Store.dispatch()"
 
-Middleware --> [done] System
-System -> [next] System
-System --> [set] Validator
+"next()" --> [chain complete] "Store.handleAction()"
+--> [call systems] ==RUNSYSTEMS==
+--> [action] "System.handle()"
+-> [event] "StateManager.push()"
+-> [ ] "System.handle()"
+--> ==COMMITSYSTEMS==
+--> "StateManager.commit()"
+-> "StateManager.shift()"
 
-Validator -> [next] Validator
---> [done] Cache
--> [next] Cache
---> [write] System
-
-System --> [done] View
-View -> (*)
-
+if "Event exists?" then
+  -> [yes] "StateManager.emit()"
+  --> ==EMITEVENT==
+  --> [event] "callback()"
+  --> ==CHANGEEVENT==
+  --> [event] "ChangeController.handle()"
+  --> "StateManager.shift()"
+else
+  --> [no] "Exit"
+endif
 
 @enduml

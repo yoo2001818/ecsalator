@@ -68,7 +68,7 @@ Store have following arguments:
 - `middlewares` - An array of middlewares.
 - `systems` - An array of systems.
 - `changeControllers` - An array of change controllers.
-- `scene` - A scene object.
+- `state` - A state object.
 
 [flux-action]: https://facebook.github.io/flux/docs/overview.html#actions
 [flux-standard-action]: https://github.com/acdlite/flux-standard-action
