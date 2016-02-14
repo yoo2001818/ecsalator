@@ -3,139 +3,69 @@
 hide empty fields
 hide empty methods
 
-package core {
-
-  interface Action {
-    type: String
-    payload: Object
-    meta: Object
-  }
-
-  interface JSON
-  interface JSONable {
-    toJSON(): JSON
-  }
-
-  Action --|> JSON
-  JSON --|> JSONable
-
-  interface Middleware {
-    engine: Engine
-    action: Action
-    next: Function
-  }
-  class MiddlewareRunner {
-    middlewares: Array<Middleware>
-  }
-
-  MiddlewareRunner --|> Middleware
-  Middleware --* MiddlewareRunner
-
-  interface System {
-    ' Systems should be able to set up events, etc. However I don't suppose
-    ' That's system's job.
-    engine: Engine
-    action: Action
-  }
-  class SystemRunner {
-    engine: Engine
-    systems: Array<System>
-  }
-
-  SystemRunner --|> Middleware
-  System --* SystemRunner
-
-  interface Function
-
-  Middleware --|> Function
-  System --|> Function
-
-  interface Component {
-  }
-
-  Component -|> JSON
-
-  class Entity {
-    engine: Engine
-    id: number
-    components: Object
-    cache: Object
-    get(key: String)
-    set(key: String, component)
-    remove(key: String)
-  }
-
-  Component --* Entity
-  Entity -|> JSONable
-
-  class State {
-    entities: Map<number, Entity>
-    meta: Object
-    components: ComponentRegister
-
-    create()
-    remove()
-  }
-
-  Entity --* State
-  State --|> JSONable
-  ComponentRegister ----* State
-
-  class ComponentRegister {
-    components: Array<string>
-  }
-
-  interface Validator {
-    entity: Entity
-    component: string
-    value: Component
-  }
-
-  Validator --|> Function
-
-  class ValidatorRunner {
-    validators: Array<Validator>
-  }
-
-  ValidatorRunner --|> Validator
-  Validator --* ValidatorRunner
-
-  interface Cache {
-  }
-
-  Cache --|> Validator
-
-  class CacheRunner {
-    caches: Array<Cache>
-  }
-
-  CacheRunner --|> Validator
-
-  Cache --* CacheRunner
-
-  class Engine {
-    cache: Object
-    validator: ValidatorRunner
-    dispatch: MiddlewareRunner
-  }
-
-  ValidatorRunner --* Engine
-  MiddlewareRunner --* Engine
-  Engine -|> State
-
+interface Action {
+  type: String
+  payload: Object
+  meta: Object
 }
 
-class BitSet
+interface JSON
+interface JSONable {
+  toJSON(): JSON
+}
+Action --|> JSON
+JSON --|> JSONable
 
-package extra {
-  class ComponentCache
-  ComponentCache --|> Cache
-  ComponentCache --> BitSet
-  class Family
-  BitSet --* Family
-  Family --|> Cache
-  Family --> ComponentCache
+interface Function {
 }
 
+interface EventEmitter {
+  emit(event, ...args)
+  on(event, listener)
+  once(event, listener)
+  removeAllListeners(event)
+  removeListener(event, listener)
+}
+
+interface Middleware {
+  next: Function
+  store: Store
+  action: Action
+}
+Middleware --|> Function
+
+interface System {
+  onMount()
+  onUnmount()
+  handle(action)
+}
+
+class StateManager {
+  push(event)
+  unshift(event)
+  -shift(event)
+  commit()
+}
+StateManager --|> EventEmitter
+
+class ChangeController {
+  onMount()
+  onUnmount()
+}
+ChangeController --* StateManager
+
+interface State {
+  {static} fromJSON(json): State
+}
+State --|> JSONable
+
+class Store {
+  dispatch(action)
+  -handleAction(action)
+}
+Middleware --o Store
+StateManager --* Store
+System --* Store
+State --* Store
 
 @enduml
