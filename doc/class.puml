@@ -3,69 +3,113 @@
 hide empty fields
 hide empty methods
 
-interface Action {
-  type: String
-  payload: Object
-  meta: Object
+package core {
+
+  interface Action {
+    type: String
+    payload: Object
+    meta: Object
+  }
+
+  interface JSON
+  interface JSONable {
+    toJSON(): JSON
+  }
+  Action --|> JSON
+  JSON --|> JSONable
+
+  interface Function {
+  }
+
+  interface EventEmitter {
+    emit(event, ...args)
+    on(event, listener)
+    once(event, listener)
+    removeAllListeners(event)
+    removeListener(event, listener)
+  }
+
+  interface Middleware {
+    next: Function
+    store: Store
+    action: Action
+  }
+  Middleware --|> Function
+
+  interface System {
+    onMount()
+    onUnmount()
+    handle(action)
+  }
+
+  class StateManager {
+    push(event)
+    unshift(event)
+    -shift(event)
+    commit()
+  }
+  StateManager --|> EventEmitter
+
+  interface ChangeController {
+    onMount()
+    onUnmount()
+  }
+  ChangeController --* StateManager
+
+  interface State {
+    {static} fromJSON(json): State
+  }
+  State --|> JSONable
+
+  class Store {
+    dispatch(action)
+    -handleAction(action)
+  }
+  Middleware --o Store
+  StateManager --* Store
+  System --* Store
+  State --* Store
+
 }
 
-interface JSON
-interface JSONable {
-  toJSON(): JSON
-}
-Action --|> JSON
-JSON --|> JSONable
+package ECS {
+  class ECS.State {
+    create(entity)
+    remove(entity)
+  }
+  ECS.State ---|> State
+  ECS.State --|> EventEmitter
 
-interface Function {
-}
+  interface Component {
+    toJSON()
+    {static} fromJSON(json)
+  }
+  Component --* ECS.State
 
-interface EventEmitter {
-  emit(event, ...args)
-  on(event, listener)
-  once(event, listener)
-  removeAllListeners(event)
-  removeListener(event, listener)
-}
+  class BitSet {
+  }
 
-interface Middleware {
-  next: Function
-  store: Store
-  action: Action
-}
-Middleware --|> Function
+  class Entity {
+    get(key)
+    add(key, options)
+    remove(key)
+  }
+  Entity --* ECS.State
+  Component --o Entity
+  Entity --|> EventEmitter
+  BitSet --* Entity
 
-interface System {
-  onMount()
-  onUnmount()
-  handle(action)
-}
+  class Family {
+    get()
+    dispose()
+  }
+  Family --* ECS.State
+  BitSet --* Family
 
-class StateManager {
-  push(event)
-  unshift(event)
-  -shift(event)
-  commit()
-}
-StateManager --|> EventEmitter
+  class ECSChangeController {
+  }
+  ECSChangeController --|> ChangeController
 
-class ChangeController {
-  onMount()
-  onUnmount()
 }
-ChangeController --* StateManager
-
-interface State {
-  {static} fromJSON(json): State
-}
-State --|> JSONable
-
-class Store {
-  dispatch(action)
-  -handleAction(action)
-}
-Middleware --o Store
-StateManager --* Store
-System --* Store
-State --* Store
 
 @enduml
