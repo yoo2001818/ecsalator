@@ -43,6 +43,7 @@ package core {
   }
 
   class StateManager {
+    queue: Array<Event>
     push(event)
     unshift(event)
     -shift(event)
@@ -50,11 +51,10 @@ package core {
   }
   StateManager --|> EventEmitter
 
-  interface ChangeController {
+  interface Controller {
     onMount()
     onUnmount()
   }
-  ChangeController --* StateManager
 
   interface State {
     {static} fromJSON(json): State
@@ -62,13 +62,26 @@ package core {
   State --|> JSONable
 
   class Store {
+    actions: EventEmitter
+    changes: StateManager
+    state: State
+    systems: {System}
+    controllers: {Controller}
     dispatch(action)
     -handleAction(action)
+    -handleChange(event)
   }
   Middleware --o Store
   StateManager --* Store
   System --* Store
   State --* Store
+  Controller --* Store
+
+  class StoreFactory {
+    setState(state)
+    addController(name, controller)
+    addSystem(name, system)
+  }
 
 }
 
@@ -106,9 +119,9 @@ package ECS {
   Family --* ECS.State
   BitSet --* Family
 
-  class ECSChangeController {
+  class ECSController {
   }
-  ECSChangeController --|> ChangeController
+  ECSController --|> Controller
 
 }
 
