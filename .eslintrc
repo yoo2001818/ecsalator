@@ -23,14 +23,7 @@
       80,
       2
     ],
-    "space-after-keywords": [
-      2,
-      "always"
-    ],
-    "space-before-blocks": [
-      2,
-      "always"
-    ],
+    "keyword-spacing": 2,
     "no-multiple-empty-lines": [
       1,
       {
