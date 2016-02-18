@@ -13,10 +13,22 @@ export default class StateManager extends EventEmitter {
     this.queue = [];
     this.finalizer = finalizer;
   }
-  push(event: Event): void {
+  push(event: Event | string, data: ?any): void {
+    if (typeof event === 'string') {
+      this.queue.push({
+        type: event, data
+      });
+      return;
+    }
     this.queue.push(event);
   }
-  unshift(event: Event): void {
+  unshift(event: Event | string, data: ?any): void {
+    if (typeof event === 'string') {
+      this.queue.unshift({
+        type: event, data
+      });
+      return;
+    }
     this.queue.unshift(event);
   }
   commit(): void {
@@ -28,5 +40,8 @@ export default class StateManager extends EventEmitter {
       // Finalize
       this.finalizer(event);
     }
+  }
+  reset(): void {
+    if (this.queue.length > 0) this.queue = [];
   }
 }
