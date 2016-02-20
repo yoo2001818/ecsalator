@@ -37,13 +37,35 @@ export default class Store {
   subscribers: EventEmitter;
   subscribeQueue: { [key: string]: boolean };
 
-  constructor() {
+  constructor(
+    systems: { [key: string]: Object },
+    controllers: { [key: string]: Object },
+    state: any
+  ) {
     this.canDispatch = true;
     this.canEdit = false;
     this.subscribers = new EventEmitter();
     this.subscribeQueue = {};
     this.actions = new EventEmitter();
     this.changes = new StateManager(this.handleChange.bind(this));
+
+    this.state = state;
+    this.systems = systems;
+    this.controllers = controllers;
+
+    // Notify systems and controlers.
+    for (let name in systems) {
+      let system = systems[name];
+      if (system && typeof(system.onMount) === 'function') {
+        system.onMount(this);
+      }
+    }
+    for (let name in controllers) {
+      let controller = controllers[name];
+      if (controller && typeof(controller.onMount) === 'function') {
+        controller.onMount(this);
+      }
+    }
   }
   dispatch(action: Action) {
     // Middlewares are not implemented yet
