@@ -81,16 +81,7 @@ export default class Store {
     this.canDispatch = false;
     this.changes.reset();
     tryFinally(() => {
-      // Notify the action to the systems.
-      this.actions.emit(action.type, action);
-      this.actions.emit('all', action);
-      // Commit changes.
-      this.canEdit = true;
-      tryFinally(() => {
-        this.changes.commit();
-      }, () => {
-        this.canEdit = true;
-      });
+      this.processAction(action);
       this.commitAction();
       this.commitSubscribers();
     }, () => {
@@ -101,11 +92,24 @@ export default class Store {
     });
   }
   // private
+  processAction(action: Action): void {
+    this.changes.reset();
+    this.actions.emit(action.type, action);
+    this.actions.emit('all', action);
+    // Commit changes.
+    this.canEdit = true;
+    tryFinally(() => {
+      this.changes.commit();
+    }, () => {
+      this.canEdit = false;
+    });
+  }
+  // private
   commitAction(): void {
     // Then resolve the remaining actions.
     while (this.actionQueue.length > 0) {
       let action = this.actionQueue.shift();
-      this.dispatch(action);
+      this.processAction(action);
     }
   }
   // private
