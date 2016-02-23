@@ -1,3 +1,5 @@
 /* @flow */
 
-// Do nothing yet
+import StoreFactory from './storeFactory';
+
+export default StoreFactory;

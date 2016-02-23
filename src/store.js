@@ -48,6 +48,7 @@ export default class Store {
     this.subscribeQueue = {};
     this.actions = new EventEmitter();
     this.changes = new StateManager(this.handleChange.bind(this));
+    this.actionQueue = [];
 
     this.state = state;
     this.systems = systems;
@@ -130,7 +131,7 @@ export default class Store {
       if (typeof controller[event.type] === 'function') {
         // Notify the controller and set subscribe queue.
         this.subscribeQueue[name] = true;
-        controller[event.type](event);
+        controller[event.type](this, event);
       }
     }
   }
