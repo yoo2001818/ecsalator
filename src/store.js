@@ -25,6 +25,17 @@ function tryFinally(tryCall, finallyCall) {
   }
 }
 
+export function applyMiddleware(
+  middlewares: Array<Function>, store: Store
+): void {
+  let next = store.dispatch;
+  middlewares.reverse().forEach(middleware => {
+    next = middleware(store)(next);
+  });
+  // Wrap the store object
+  store.dispatch = next;
+}
+
 export default class Store {
   actions: EventEmitter;
   changes: StateManager;

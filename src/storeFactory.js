@@ -1,17 +1,19 @@
-import Store from './store';
+import Store, { applyMiddleware } from './store';
 
 export default class StoreFactory {
   state: any;
   systems: { [key: string]: Object };
   controllers: { [key: string]: Object };
+  middlewares: Array<Function>;
   constructor() {
     this.systems = {};
     this.controllers = {};
+    this.middlewares = [];
   }
   create(): Store {
-    return new Store(
+    return applyMiddleware(this.middlewares, new Store(
       this.systems, this.controllers, this.state
-    );
+    ));
   }
   setState(state: any): void {
     this.state = state;
@@ -35,5 +37,8 @@ export default class StoreFactory {
     } else {
       this.systems[name] = system;
     }
+  }
+  addMiddleware(middleware: Function): void {
+    this.middlewares.push(middleware);
   }
 }
