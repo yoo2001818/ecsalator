@@ -62,6 +62,9 @@ export default class Store {
     this.actionQueue = [];
 
     this.state = state;
+    if (state && typeof(state.onMount) === 'function') {
+      state.onMount(this);
+    }
     this.systems = systems;
     this.controllers = controllers;
 
