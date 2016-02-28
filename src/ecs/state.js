@@ -1,13 +1,10 @@
 import Store from '../store';
-
-// A placeholder until the entity class is complete
-type Entity = Object;
+import Entity from '../entity';
 
 // An Entity-Component State implementation
 export default class State {
   components: { [key: string]: Map<number, Object> };
   componentList: Array<string>;
-  entities: Map<number, Entity>;
   globals: Object;
   store: ?Store;
   constructor(componentList: Array<string>) {
@@ -21,6 +18,6 @@ export default class State {
     this.store = store;
   }
   get(id: number): ?Entity {
-    return this.entities.get(id);
+    return new Entity(this, id);
   }
 }
