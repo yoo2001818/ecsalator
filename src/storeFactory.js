@@ -1,3 +1,5 @@
+/* @flow */
+
 import Store, { applyMiddleware } from './store';
 
 export default class StoreFactory {
@@ -11,9 +13,11 @@ export default class StoreFactory {
     this.middlewares = [];
   }
   create(): Store {
-    return applyMiddleware(this.middlewares, new Store(
+    let store = new Store(
       this.systems, this.controllers, this.state
-    ));
+    );
+    applyMiddleware(this.middlewares, store);
+    return store;
   }
   setState(state: any): void {
     this.state = state;

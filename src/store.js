@@ -26,7 +26,7 @@ function tryFinally(tryCall, finallyCall) {
 }
 
 export function applyMiddleware(
-  middlewares: Array<Function>, store: Store
+  middlewares: Array<Function>, store: Object 
 ): void {
   let next = store.dispatch;
   middlewares.reverse().forEach(middleware => {
