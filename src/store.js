@@ -26,7 +26,7 @@ function tryFinally(tryCall, finallyCall) {
 }
 
 export function applyMiddleware(
-  middlewares: Array<Function>, store: Object 
+  middlewares: Array<Function>, store: Object
 ): void {
   let next = store.dispatch;
   middlewares.reverse().forEach(middleware => {
@@ -145,7 +145,7 @@ export default class Store {
       if (typeof controller[event.type] === 'function') {
         // Notify the controller and set subscribe queue.
         this.subscribeQueue[name] = true;
-        controller[event.type](this, event);
+        controller[event.type](event, this);
       }
     }
   }
