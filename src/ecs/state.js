@@ -4,11 +4,11 @@ import Entity from '../entity';
 // An Entity-Component State implementation
 export default class State {
   entities: Array<Entity>;
-  componentList: Array<string>;
+  components: Array<string>;
   globals: Object;
   store: ?Store;
-  constructor(componentList: Array<string>) {
-    this.componentList = componentList.concat(['id']);
+  constructor(components: Array<string>) {
+    this.components = components.concat(['id']);
     this.entities = new Map();
     this.globals = {
       nextId: 0
