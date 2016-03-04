@@ -1,20 +1,23 @@
 import * as ecsChanges from './changes';
 
 const ECSController = {
-  [ecsChanges.ENTITY_CREATE]: (change, store) => {
+  [ecsChanges.ENTITY_CREATE]: (change, store, notify) => {
     const { id, template } = change.data;
-    store.state.create(id, template);
+    // Manipulate change data to include entity data
+    change.data.entity = store.state.create(id, template);
+    notify(change);
   },
-  [ecsChanges.ENTITY_REMOVE]: (change, store) => {
+  [ecsChanges.ENTITY_REMOVE]: (change, store, notify) => {
+    notify();
     store.state.remove(change.data);
   },
-  [ecsChanges.SET]: (change, store) => {
-    const { id, key, value } = change.data;
-    store.state.get(id).set(key, value);
+  [ecsChanges.SET]: (change) => {
+    const { entity, key, value } = change.data;
+    entity.set(key, value);
   },
-  [ecsChanges.REMOVE]: (change, store) => {
-    const { id, key } = change.data;
-    store.state.get(id).remove(key);
+  [ecsChanges.REMOVE]: (change) => {
+    const { entity, key } = change.data;
+    entity.remove(key);
   }
 };
 

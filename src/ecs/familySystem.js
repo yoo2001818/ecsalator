@@ -26,39 +26,39 @@ export default class FamilySystem {
     this.entityFamilies = [];
     // Register changes
     store.changes.on(ecsChanges.ENTITY_CREATE, change => {
-      const { id, template } = change.data;
+      const { entity, template } = change.data;
       let pattern = this.createBitSet();
       // Iterate through and push all components
       for (let name in template) {
         pattern.set(this.getPos(name));
       }
-      this.entityComponents[id] = pattern;
-      this.entityFamilies[id] = new BitSet();
+      this.entityComponents[entity.id] = pattern;
+      this.entityFamilies[entity.id] = new BitSet();
       // Update the entity
-      this.updateEntity(id);
+      this.updateEntity(entity.id);
     });
     store.changes.on(ecsChanges.ENTITY_REMOVE, change => {
-      const { id } = change.data;
-      const familyPattern = this.entityFamilies[id];
+      const { entity } = change.data;
+      const familyPattern = this.entityFamilies[entity.id];
       // Remove from all families
       for (let family of this.families) {
         if (familyPattern.get(family.id)) {
-          family.remove(id);
+          family.remove(entity.id);
         }
       }
       // Done!
-      delete this.entityFamilies[id];
-      delete this.entityComponents[id];
+      delete this.entityFamilies[entity.id];
+      delete this.entityComponents[entity.id];
     });
     store.changes.on(ecsChanges.SET, change => {
-      const { id, key } = change.data;
-      this.entityComponents[id].set(this.getPos(key));
-      this.updateEntity(id);
+      const { entity, key } = change.data;
+      this.entityComponents[entity.id].set(this.getPos(key));
+      this.updateEntity(entity.id);
     });
     store.changes.on(ecsChanges.REMOVE, change => {
-      const { id, key } = change.data;
-      this.entityComponents[id].clear(this.getPos(key));
-      this.updateEntity(id);
+      const { entity, key } = change.data;
+      this.entityComponents[entity.id].clear(this.getPos(key));
+      this.updateEntity(entity.id);
     });
   }
   updateEntity(id) {

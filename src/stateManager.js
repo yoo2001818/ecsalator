@@ -7,8 +7,8 @@ import EventEmitter from './eventEmitter';
 
 export default class StateManager extends EventEmitter {
   queue: Array<Event>;
-  finalizer: (event: Event, notify: () => void) => any;
-  notify: () => void;
+  finalizer: (event: Event, notify: (event: ?Event) => void) => any;
+  notify: (event: ?Event) => void;
   recentEvent: ?Event;
   constructor(finalizer: (event: Event) => any) {
     super();
@@ -18,11 +18,15 @@ export default class StateManager extends EventEmitter {
     this.notify = this.notify.bind(this);
     this.recentEvent = null;
   }
-  notify(): void {
+  notify(event: ?Event): void {
     if (this.recentEvent == null) {
       throw new Error('There is no event to notify');
     }
-    this.emit(this.recentEvent.type, this.recentEvent);
+    if (event) {
+      this.emit(event.type, event);
+    } else {
+      this.emit(this.recentEvent.type, this.recentEvent);
+    }
     this.recentEvent = null;
   }
   push(event: Event | string, data: ?any): void {

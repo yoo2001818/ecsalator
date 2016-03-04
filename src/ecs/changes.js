@@ -10,8 +10,8 @@ export const entityCreate = createChange(ENTITY_CREATE,
 );
 export const entityRemove = createChange(ENTITY_REMOVE);
 export const set = createChange(SET,
-  (id, key, value) => ({ id, key, value })
+  (entity, key, value) => ({ entity, key, value })
 );
 export const remove = createChange(REMOVE,
-  (id, key) => ({ id, key })
+  (entity, key) => ({ entity, key })
 );

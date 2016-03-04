@@ -30,6 +30,7 @@ export default class State {
       // Or we can call entity.set.
       Object.assign(entity, template);
     }
+    return entity;
   }
   remove(object: number | Entity): void {
     let id: number;
