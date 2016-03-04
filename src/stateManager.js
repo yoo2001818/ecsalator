@@ -7,11 +7,23 @@ import EventEmitter from './eventEmitter';
 
 export default class StateManager extends EventEmitter {
   queue: Array<Event>;
-  finalizer: (event: Event) => any;
+  finalizer: (event: Event, notify: () => void) => any;
+  notify: () => void;
+  recentEvent: ?Event;
   constructor(finalizer: (event: Event) => any) {
     super();
     this.queue = [];
     this.finalizer = finalizer;
+    // Wrap notify function with this scope
+    this.notify = this.notify.bind(this);
+    this.recentEvent = null;
+  }
+  notify(): void {
+    if (this.recentEvent == null) {
+      throw new Error('There is no event to notify');
+    }
+    this.emit(this.recentEvent.type, this.recentEvent);
+    this.recentEvent = null;
   }
   push(event: Event | string, data: ?any): void {
     if (typeof event === 'string') {
@@ -35,10 +47,11 @@ export default class StateManager extends EventEmitter {
     // Commit remaining data from the cache
     while (this.queue.length > 0) {
       let event = this.queue.shift();
-      // Pass to event listeners..
-      this.emit(event.type, event);
+      this.recentEvent = event;
       // Finalize
-      this.finalizer(event);
+      this.finalizer(event, this.notify);
+      // Notify action if finalizer hasn't processed it yet.
+      if (this.recentEvent != null) this.notify();
     }
   }
   reset(): void {

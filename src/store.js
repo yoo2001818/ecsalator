@@ -42,6 +42,7 @@ export default class Store {
   state: any;
   systems: { [key: string]: Object };
   controllers: { [key: string]: Object };
+  controllerHandlers: { [key: string]: { name: string, handler: Function} };
   canDispatch: boolean;
   canEdit: boolean;
   actionQueue: Array<Action>;
@@ -65,20 +66,30 @@ export default class Store {
     if (state && typeof(state.onMount) === 'function') {
       state.onMount(this);
     }
-    this.systems = systems;
-    this.controllers = controllers;
 
-    // Notify systems and controlers.
+    this.systems = systems;
     for (let name in systems) {
       let system = systems[name];
       if (system && typeof(system.onMount) === 'function') {
         system.onMount(this);
       }
     }
+
+    this.controllers = controllers;
+    this.controllerHandlers = {};
     for (let name in controllers) {
       let controller = controllers[name];
       if (controller && typeof(controller.onMount) === 'function') {
         controller.onMount(this);
+      }
+      for (let eventName in controller) {
+        if (eventName === 'onMount') continue;
+        if (this.controllerHandlers[eventName] != null) {
+          throw new Error('Controller event ' + eventName + ' conflicts');
+        }
+        this.controllerHandlers[eventName] = {
+          handler: controller[eventName], name
+        };
       }
     }
   }
@@ -138,16 +149,12 @@ export default class Store {
     this.subscribeQueue = {};
   }
   // internal
-  handleChange(event: Event): void {
-    // Traverse controllers and notify if it listens to the event.
-    for (let name in this.controllers) {
-      let controller = this.controllers[name];
-      if (typeof controller[event.type] === 'function') {
-        // Notify the controller and set subscribe queue.
-        this.subscribeQueue[name] = true;
-        controller[event.type](event, this);
-      }
-    }
+  handleChange(event: Event, notify: Function): void {
+    let controller = this.controllerHandlers[event.type];
+    if (controller == null) return;
+    controller.handler.call(this.controllers[controller.name],
+      event, this, notify);
+    this.subscribeQueue[controller.name] = true;
   }
   subscribe(name: string, callback: Function): void {
     this.subscribers.on(name, callback);
