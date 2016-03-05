@@ -8,13 +8,13 @@ export class Family {
     this.entities = [];
   }
   match(entityPattern) {
-    return this.pattern.contains(entityPattern);
+    return entityPattern.contains(this.pattern);
   }
   add(entity) {
     this.entities.push(entity);
   }
   remove(entity) {
-    this.entities.splice(entity, 1);
+    this.entities.splice(this.entities.indexOf(entity), 1);
   }
 }
 
@@ -35,15 +35,16 @@ export default class FamilySystem {
       this.entityComponents[entity.id] = pattern;
       this.entityFamilies[entity.id] = new BitSet();
       // Update the entity
-      this.updateEntity(entity.id);
+      this.updateEntity(entity);
     });
     store.changes.on(ecsChanges.ENTITY_REMOVE, change => {
-      const { entity } = change.data;
+      const entity = change.data;
       const familyPattern = this.entityFamilies[entity.id];
+      if (familyPattern == null) return;
       // Remove from all families
       for (let family of this.families) {
         if (familyPattern.get(family.id)) {
-          family.remove(entity.id);
+          family.remove(entity);
         }
       }
       // Done!
@@ -52,27 +53,45 @@ export default class FamilySystem {
     });
     store.changes.on(ecsChanges.SET, change => {
       const { entity, key } = change.data;
+      if (this.entityComponents[entity.id] == null) return;
+      // Skip if entity already have the component
+      if (this.entityComponents[entity.id].get(this.getPos(key))) return;
       this.entityComponents[entity.id].set(this.getPos(key));
-      this.updateEntity(entity.id);
+      this.updateEntity(entity);
     });
     store.changes.on(ecsChanges.REMOVE, change => {
       const { entity, key } = change.data;
+      if (this.entityComponents[entity.id] == null) return;
       this.entityComponents[entity.id].clear(this.getPos(key));
-      this.updateEntity(entity.id);
+      this.updateEntity(entity);
     });
   }
-  updateEntity(id) {
-    let pattern = this.entityComponents[id];
-    let familyPattern = this.entityFamilies[id];
+  get(components) {
+    let pattern = this.createBitSet();
+    for (let name of components) {
+      pattern.set(this.getPos(name));
+    }
+    // Iterate and find matching family
+    for (let family of this.families) {
+      if (family.pattern.equals(pattern)) return family;
+    }
+    // Create if it doesn't exist
+    let family = new Family(this.families.length, pattern);
+    this.families.push(family);
+    return family;
+  }
+  updateEntity(entity) {
+    let pattern = this.entityComponents[entity.id];
+    let familyPattern = this.entityFamilies[entity.id];
     for (let family of this.families) {
       let current = family.match(pattern);
       let previous = familyPattern.get(family.id);
       if (current !== previous) {
         familyPattern.set(family.id, current);
         if (current) {
-          family.add(id);
+          family.add(entity);
         } else {
-          family.remove(id);
+          family.remove(entity);
         }
       }
     }

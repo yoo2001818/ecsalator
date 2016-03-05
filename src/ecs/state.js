@@ -1,5 +1,5 @@
 import Store from '../store';
-import Entity from '../entity';
+import Entity from './entity';
 
 // An Entity-Component State implementation
 export default class State {
@@ -9,7 +9,7 @@ export default class State {
   store: ?Store;
   constructor(components: Array<string>) {
     this.components = components.concat(['id']);
-    this.entities = new Map();
+    this.entities = [];
     this.globals = {
       nextId: 0
     };
@@ -30,6 +30,7 @@ export default class State {
       // Or we can call entity.set.
       Object.assign(entity, template);
     }
+    this.entities[id] = entity;
     return entity;
   }
   remove(object: number | Entity): void {

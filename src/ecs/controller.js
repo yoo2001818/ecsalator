@@ -13,10 +13,12 @@ const ECSController = {
   },
   [ecsChanges.SET]: (change) => {
     const { entity, key, value } = change.data;
+    // notify();
     entity.set(key, value);
   },
   [ecsChanges.REMOVE]: (change) => {
     const { entity, key } = change.data;
+    // notify();
     entity.remove(key);
   }
 };
