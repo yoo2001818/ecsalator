@@ -42,7 +42,8 @@ export default class FamilySystem {
       const familyPattern = this.entityFamilies[entity.id];
       if (familyPattern == null) return;
       // Remove from all families
-      for (let family of this.families) {
+      for (let i = 0; i < this.families.length; ++i) {
+        let family = this.families[i];
         if (familyPattern.get(family.id)) {
           family.remove(entity);
         }
@@ -68,11 +69,12 @@ export default class FamilySystem {
   }
   get(components) {
     let pattern = this.createBitSet();
-    for (let name of components) {
-      pattern.set(this.getPos(name));
+    for (let i = 0; i < components.length; ++i) {
+      pattern.set(this.getPos(components[i]));
     }
     // Iterate and find matching family
-    for (let family of this.families) {
+    for (let i = 0; i < this.families.length; ++i) {
+      let family = this.families[i];
       if (family.pattern.equals(pattern)) return family;
     }
     // Create if it doesn't exist
@@ -83,7 +85,8 @@ export default class FamilySystem {
   updateEntity(entity) {
     let pattern = this.entityComponents[entity.id];
     let familyPattern = this.entityFamilies[entity.id];
-    for (let family of this.families) {
+    for (let i = 0; i < this.families.length; ++i) {
+      let family = this.families[i];
       let current = family.match(pattern);
       let previous = familyPattern.get(family.id);
       if (current !== previous) {

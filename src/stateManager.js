@@ -4,15 +4,16 @@ type Event = {
   data?: any;
 };
 import EventEmitter from './eventEmitter';
+import LinkedDeque from './util/linkedDeque';
 
 export default class StateManager extends EventEmitter {
-  queue: Array<Event>;
+  queue: LinkedDeque;
   finalizer: (event: Event, notify: (event: ?Event) => void) => any;
   notify: (event: ?Event) => void;
   recentEvent: ?Event;
   constructor(finalizer: (event: Event) => any) {
     super();
-    this.queue = [];
+    this.queue = new LinkedDeque();
     this.finalizer = finalizer;
     // Wrap notify function with this scope
     this.notify = this.notify.bind(this);
@@ -22,7 +23,7 @@ export default class StateManager extends EventEmitter {
     if (this.recentEvent == null) {
       throw new Error('There is no event to notify');
     }
-    if (event) {
+    if (event != null) {
       this.emit(event.type, event);
     } else {
       this.emit(this.recentEvent.type, this.recentEvent);

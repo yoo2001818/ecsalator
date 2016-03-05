@@ -9,7 +9,11 @@ export default class EventEmitter {
   emit(event: string, ...args: Array<any>): void {
     let group = this.listenerData[event];
     if (group == null) return;
-    group.forEach(listener => listener.apply(null, args));
+    // For the sake of optimization, use for.. (Creating closure is expensive,
+    // so forEach would be slow)
+    for (let i = 0; i < group.length; ++i) {
+      group[i].apply(null, args);
+    }
   }
   on(event: string, listener: Function): boolean {
     // Init event group if not exists
