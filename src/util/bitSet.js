@@ -34,7 +34,7 @@ export default class BitSet {
   checkBounds(pos: number): void {
     if (pos < 0 || pos >= this.words.length * BITS_PER_WORD) {
       // throw new Error('BitSet pos ' + pos + ' is out of bounds');
-      let newWords = new Uint32Array(Math.ceil(pos / BITS_PER_WORD));
+      let newWords = new Uint32Array(Math.ceil((pos + 1) / BITS_PER_WORD));
       newWords.set(this.words);
       this.words = newWords;
     }
@@ -110,7 +110,7 @@ export default class BitSet {
   setAll(set: number | boolean = true): void {
     let val = 0;
     if (set) val = ~0;
-    for (let i = 0; i < this._words.length; ++i) {
+    for (let i = 0; i < this.words.length; ++i) {
       this.words[i] = val;
     }
   }
