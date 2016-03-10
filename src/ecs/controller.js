@@ -4,7 +4,12 @@ const ECSController = {
   [ecsChanges.ENTITY_CREATE]: (change, store, notify) => {
     const { id, template } = change.data;
     // Manipulate change data to include entity data
-    change.data.entity = store.state.create(id, template);
+    let entity = store.state.create(id);
+    change.data.entity = entity;
+    for (let name in template) {
+      // Use template to call SET change event
+      store.changes.unshift(ecsChanges.set(entity, name, template[name]));
+    }
     notify(change);
   },
   [ecsChanges.ENTITY_REMOVE]: (change, store, notify) => {
