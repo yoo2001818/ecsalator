@@ -28,7 +28,7 @@ function tryFinally(tryCall, finallyCall) {
 export function applyMiddleware(
   middlewares: Array<Function>, store: Object
 ): void {
-  let next = store.dispatch;
+  let next = store.dispatch.bind(store);
   middlewares.reverse().forEach(middleware => {
     next = middleware(store)(next);
   });
@@ -79,9 +79,6 @@ export default class Store {
     this.controllerHandlers = {};
     for (let name in controllers) {
       let controller = controllers[name];
-      if (controller && typeof(controller.onMount) === 'function') {
-        controller.onMount(this);
-      }
       for (let eventName in controller) {
         if (eventName === 'onMount') continue;
         if (this.controllerHandlers[eventName] != null) {
@@ -90,6 +87,9 @@ export default class Store {
         this.controllerHandlers[eventName] = {
           handler: controller[eventName], name
         };
+      }
+      if (controller && typeof(controller.onMount) === 'function') {
+        controller.onMount(this);
       }
     }
   }

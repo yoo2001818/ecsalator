@@ -19,11 +19,13 @@ export class Family {
 }
 
 export default class FamilySystem {
-  onMount(store) {
-    this.store = store;
+  constructor() {
     this.families = [];
     this.entityComponents = [];
     this.entityFamilies = [];
+  }
+  onMount(store) {
+    this.store = store;
     // Register changes
     store.changes.on(ecsChanges.ENTITY_CREATE, change => {
       const { entity, template } = change.data;
