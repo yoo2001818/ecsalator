@@ -82,6 +82,16 @@ export default class FamilySystem {
     // Create if it doesn't exist
     let family = new Family(this.families.length, pattern);
     this.families.push(family);
+    // Iterate and add all matching entities
+    for (let i = 0; i < this.store.state.entityList.length; ++i) {
+      let entity = this.store.state.entityList[i];
+      let pattern = this.entityComponents[entity.id];
+      let familyPattern = this.entityFamilies[entity.id];
+      if (family.match(pattern)) {
+        familyPattern.set(family.id);
+        family.add(entity);
+      }
+    }
     return family;
   }
   updateEntity(entity) {

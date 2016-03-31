@@ -4,12 +4,14 @@ import Entity from './entity';
 // An Entity-Component State implementation
 export default class State {
   entities: Array<Entity>;
+  entityList: Array<Entity>;
   components: Array<string>;
   globals: Object;
   store: ?Store;
   constructor(components: Array<string>) {
     this.components = components.concat(['id']);
     this.entities = [];
+    this.entityList = [];
     this.globals = {
       nextId: 0
     };
@@ -31,6 +33,7 @@ export default class State {
       Object.assign(entity, template);
     }
     this.entities[id] = entity;
+    this.entityList.push(entity);
     return entity;
   }
   remove(object: number | Entity): void {
@@ -40,6 +43,7 @@ export default class State {
     if (this.entities[id] === undefined) {
       throw new Error('Entity does not exists');
     }
+    this.entityList.splice(this.entities[id], 1);
     delete this.entities[id];
   }
 }
